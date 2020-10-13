@@ -1,9 +1,12 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-require('dotenv').config();
+const fileUpload = require('express-fileupload');
+const fs = require('fs');
 const app = express();
+require('dotenv').config();
 app.use(cors());
+app.use(fileUpload())
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 
@@ -16,6 +19,7 @@ client.connect(err => {
     const ourServices = client.db(process.env.DB_NAME).collection("ourServices");
     const orders = client.db(process.env.DB_NAME).collection("orders");
     const reviews = client.db(process.env.DB_NAME).collection("reviews");
+    const admin = client.db(process.env.DB_NAME).collection("admin");
 
     // loading all orders
     app.get('/allOrders', (req, res) => {
@@ -49,17 +53,45 @@ client.connect(err => {
         .then(result => res.send(result.insertedCount > 0))
     })
 
+    // checking for admin
+    app.get('/checkAdmin/:email', (req, res) => {
+        admin.find({email: req.params.email})
+        .toArray((err, docs) => res.send(docs.length > 0));
+    })
+
+    // loading all services
+    app.get('/allServices', (req, res) => {
+        ourServices.find({})
+        .toArray((err, docs) => res.send(docs));
+    })
+
+    // adding new service
+    app.post('/addService', (req, res) => {
+        const file = req.files.file;
+        const name = req.body.name;
+        const desc = req.body.description;
+        const encodeImg = file.toString('base64');
+        const image = { 
+            contentType: file.mimetype,
+            size: file.size,
+            img: Buffer(encodeImg, 'base64')
+        }
+        const newService = {name, desc, image};
+        ourServices.insertOne(newService)
+        .then(result => res.send(result.insertedCount > 0))
+    })
+
+    // adding new admin
+    app.post('/makeAdmin', (req, res) => {
+        const newAdmin = req.body;
+        admin.insertOne(newAdmin)
+        .then(result => res.send(result.insertedCount > 0))
+    })
+
     // // load single order
     // app.get('/order', (req, res) => {
     //     orders.find({_id: ObjectId(req.query.id)})
     //     .toArray((err, docs) => res.send(docs[0]));
-    // })
-
-    // // adding order
-    // app.post('/addOrder', (req, res) => {
-    //     const order = req.body;
-    //     orders.insertOne(order)
-    //     .then(result => res.send(result.insertedCount > 0))
     // })
 
     // // updating order

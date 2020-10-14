@@ -95,24 +95,14 @@ client.connect(err => {
         .then(result => res.send(result.insertedCount > 0))
     })
 
-    // // load single order
-    // app.get('/order', (req, res) => {
-    //     orders.find({_id: ObjectId(req.query.id)})
-    //     .toArray((err, docs) => res.send(docs[0]));
-    // })
-
-    // // updating order
-    // app.patch('/edit/:id', (req, res) => {
-    //     orders.updateOne({_id: ObjectId(req.params.id)},
-    //     {$set: {
-    //         name: req.body.name,
-    //         category: req.body.category,
-    //         price: req.body.price,
-    //         amount: req.body.amount,
-    //         photo: req.body.photo
-    //     }})
-    //     .then(result => res.send(result.modifiedCount > 0))
-    // })
+    // updating order
+    app.patch('/edit/:id', (req, res) => {
+        orders.updateOne({_id: ObjectId(req.params.id)},
+        {$set: {
+            status: req.body.status
+        }})
+        .then(result => res.send(result.modifiedCount > 0))
+    })
 });
 
 app.listen(process.env.PORT || 5000);

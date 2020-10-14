@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const fileUpload = require('express-fileupload');
-const fs = require('fs');
+const fs = require('fs-extra');
 const app = express();
 require('dotenv').config();
 app.use(cors());
@@ -67,18 +67,25 @@ client.connect(err => {
 
     // adding new service
     app.post('/addService', (req, res) => {
-        const file = req.files.file;
         const name = req.body.name;
         const desc = req.body.description;
-        const encodeImg = file.toString('base64');
-        const image = { 
-            contentType: file.mimetype,
-            size: file.size,
-            img: Buffer(encodeImg, 'base64')
-        }
-        const newService = {name, desc, image};
-        ourServices.insertOne(newService)
-        .then(result => res.send(result.insertedCount > 0))
+        const file = req.files.file;
+        const filePath = `${__dirname}/icons/${file.name}`;
+        file.mv(filePath, err => {
+            if(err) { console.log(err) }
+            const encodeImg = fs.readFileSync(filePath, 'base64');
+            const image = { 
+                contentType: file.mimetype,
+                size: file.size,
+                img: Buffer(encodeImg, 'base64')
+            }
+            const newService = {name, desc, image};
+            ourServices.insertOne(newService)
+            .then(result => {
+                fs.remove(filePath)
+                res.send(result.insertedCount > 0)
+            })
+        })
     })
 
     // adding new admin

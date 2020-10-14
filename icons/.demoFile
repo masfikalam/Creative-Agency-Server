@@ -1,0 +1,1 @@
+This directory is needed for image upload. Git can't push empty directories. That's why I'm adding this demoFile to make this directory worth something.
